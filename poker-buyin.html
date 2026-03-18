@@ -49,14 +49,15 @@
   }
 
   .header-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
     letter-spacing: 2px;
-    color: var(--text);
-    opacity: 0.4;
+    color: var(--gold);
+    opacity: 0.55;
     text-transform: uppercase;
     white-space: nowrap;
     flex-shrink: 0;
+    line-height: 1.3;
   }
 
   .logo-input {
@@ -202,21 +203,21 @@
   .player-main {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px 12px;
+    gap: 8px;
+    padding: 7px 10px 8px;
     cursor: pointer;
     user-select: none;
   }
 
   .player-avatar {
-    width: 32px; height: 32px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     background: var(--green-felt);
     border: 1.5px solid var(--green-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 12px;
     flex-shrink: 0;
   }
 
@@ -224,7 +225,7 @@
 
   .player-name {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
+    font-size: 26px;
     letter-spacing: 1.5px;
     line-height: 1.15;
     white-space: nowrap;
@@ -232,18 +233,18 @@
     text-overflow: ellipsis;
   }
 
-  .player-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .player-meta { font-size: 10px; color: var(--muted); margin-top: 0px; }
 
   .player-right { text-align: right; flex-shrink: 0; }
 
   .player-amount {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
+    font-size: 26px;
     color: var(--gold-light);
     line-height: 1.15;
   }
 
-  .player-buyin-count { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .player-buyin-count { font-size: 10px; color: var(--muted); margin-top: 0px; }
 
   .expand-arrow {
     font-size: 13px;
@@ -388,20 +389,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 13px 18px;
+    padding: 10px 18px;
     cursor: pointer;
     user-select: none;
   }
 
   .add-toggle-label {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
+    font-size: 18px;
     letter-spacing: 2px;
     color: var(--gold);
   }
 
   .add-toggle-arrow {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--muted);
     transition: transform 0.2s;
   }
@@ -409,18 +410,18 @@
 
   .add-body {
     display: none;
-    padding: 0 16px 28px;
+    padding: 0 14px 20px;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .add-panel.open .add-body { display: flex; }
 
   .input-label {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--muted);
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
 
   input[type="text"], input[type="number"] {
@@ -430,8 +431,8 @@
     border-radius: 8px;
     color: var(--text);
     font-family: 'DM Mono', monospace;
-    font-size: 18px;
-    padding: 13px 14px;
+    font-size: 16px;
+    padding: 9px 12px;
     outline: none;
     transition: border-color 0.2s;
     -webkit-appearance: none;
@@ -439,15 +440,15 @@
   }
   input:focus { border-color: var(--gold); }
 
-  .quick-amounts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick-amounts { display: flex; gap: 5px; flex-wrap: wrap; }
 
   .quick-btn {
     background: #1c1c1c;
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: 'DM Mono', monospace;
-    font-size: 15px;
-    padding: 9px 14px;
+    font-size: 13px;
+    padding: 7px 10px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
@@ -465,9 +466,9 @@
     border: none;
     border-radius: 10px;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     letter-spacing: 3px;
-    padding: 15px;
+    padding: 11px;
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
   }
@@ -600,17 +601,18 @@
   .stats-toggle {
     background: none;
     border: none;
-    color: rgba(201,168,76,0.5);
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.5px;
+    color: var(--gold);
+    opacity: 0.55;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
     cursor: pointer;
     padding: 0;
     line-height: 1;
     flex-shrink: 0;
-    transition: color 0.15s;
+    transition: opacity 0.15s;
   }
-  .stats-toggle:active { color: var(--gold); }
+  .stats-toggle:active { opacity: 1; }
 </style>
 </head>
 <body>
@@ -621,7 +623,7 @@
     <div class="header-label">Buy-in<br>Tracker</div>
     <input class="logo-input" id="logo-input" type="text" maxlength="20" placeholder="Poker Night" spellcheck="false">
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="stats-toggle" id="stats-toggle" onclick="toggleStats()">Show Info ▼</button>
+      <button class="stats-toggle" id="stats-toggle" onclick="toggleStats()">Hide Info ▲</button>
     </div>
   </div>
   <div class="stats-bar" id="stats-bar">
