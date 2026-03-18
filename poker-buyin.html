@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Poker Night</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a7a4a;
+    --green-light: #22a05e;
+    --green-felt: #0f5a34;
+    --gold: #c9a84c;
+    --gold-light: #e8c96d;
+    --red: #c0392b;
+    --bg: #0a0a0a;
+    --card: #131313;
+    --border: #2a2a2a;
+    --text: #f0ede8;
+    --muted: #888;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--green-felt);
+    padding: 14px 16px 12px;
+    border-bottom: 3px solid var(--gold);
+    flex-shrink: 0;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text);
+    opacity: 0.4;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .logo-input {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    background: var(--green-felt);
+    border: none;
+    border-bottom: 1px dashed rgba(201,168,76,0.25);
+    border-radius: 6px;
+    outline: none;
+    padding: 2px 8px 3px;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    caret-color: var(--gold);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .logo-input::placeholder { color: var(--gold); opacity: 0.35; }
+  .logo-input:focus { background: var(--green-felt); border-bottom-color: rgba(201,168,76,0.7); }
+  .logo-input:-webkit-autofill { -webkit-box-shadow: 0 0 0px 1000px #0f5a34 inset; -webkit-text-fill-color: var(--gold); }
+
+  .suits {
+    font-size: 20px;
+    opacity: 0.4;
+    letter-spacing: 2px;
+    flex-shrink: 0;
+  }
+
+  .stats-bar {
+    display: flex;
+    margin-top: 12px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .stat {
+    flex: 1;
+    padding: 7px 10px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: #0e0e0e;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 14px 0;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* SCROLLABLE AREA */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px; /* updated by JS when panel opens */
+  }
+
+  .tab-page { display: none; }
+  .tab-page.active { display: block; padding-top: 4px; }
+
+  /* SECTION HEAD */
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 6px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  .clear-btn {
+    font-size: 13px;
+    color: var(--red);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    opacity: 0.7;
+  }
+
+  /* PLAYER LIST */
+  .player-list {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 8px;
+  }
+
+  .player-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: slideIn 0.22s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .player-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .player-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--green-felt);
+    border: 1.5px solid var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .player-info { flex: 1; min-width: 0; }
+
+  .player-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .player-right { text-align: right; flex-shrink: 0; }
+
+  .player-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+
+  .player-buyin-count { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .expand-arrow {
+    font-size: 13px;
+    color: var(--muted);
+    margin-left: 4px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .player-card.expanded .expand-arrow { transform: rotate(180deg); }
+
+  /* PER-PLAYER HISTORY */
+  .player-history {
+    max-height: 0;
+    overflow: hidden;
+    border-top: 0px solid var(--border);
+    background: #0d0d0d;
+    transition: max-height 0.3s ease, border-top-width 0.3s ease;
+  }
+
+  .player-card.expanded .player-history {
+    max-height: 400px;
+    border-top: 1px solid var(--border);
+  }
+
+  .history-inner { padding: 8px 14px 4px; }
+
+  .history-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .history-row:last-child { border-bottom: none; }
+
+  .history-index { font-size: 13px; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
+
+  .history-label { flex: 1; font-size: 15px; color: var(--text); opacity: 0.8; }
+
+  .history-tag {
+    display: inline-block;
+    font-size: 10px;
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    background: var(--green-felt);
+    color: var(--green-light);
+    letter-spacing: 0.5px;
+  }
+  .history-tag.rebuy { background: rgba(201,168,76,0.12); color: var(--gold); }
+
+  .history-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold-light);
+    flex-shrink: 0;
+  }
+
+  .history-time { font-size: 13px; color: var(--muted); flex-shrink: 0; min-width: 48px; text-align: right; }
+
+  .history-actions { display: flex; gap: 8px; padding: 10px 0 10px; }
+
+  .rebuy-btn {
+    flex: 1;
+    background: rgba(26,122,74,0.18);
+    border: 1px solid var(--green);
+    color: var(--green-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  .rebuy-btn:active { background: rgba(26,122,74,0.4); }
+
+  .remove-btn-sm {
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.3);
+    color: var(--red);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 13px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .remove-btn-sm:active { background: rgba(192,57,43,0.3); }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 44px 20px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 2.2;
+  }
+  .empty-state .big { font-size: 50px; display: block; margin-bottom: 6px; opacity: 0.25; }
+
+  /* LOG TAB */
+  .log-wrap { padding: 0 16px; }
+
+  .log-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .log-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    animation: slideIn 0.2s ease;
+  }
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .log-dot.join   { background: var(--green-light); }
+  .log-dot.rebuy  { background: var(--gold); }
+  .log-dot.remove { background: var(--red); }
+
+  .log-text { flex: 1; font-size: 15px; color: var(--text); opacity: 0.85; }
+  .log-text .log-name { color: var(--gold-light); }
+  .log-time { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+  .log-empty { padding: 24px; text-align: center; font-size: 15px; color: var(--muted); }
+
+  /* STICKY ADD PANEL */
+  .add-panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #101010;
+    border-top: 2px solid var(--gold);
+    z-index: 200;
+  }
+
+  .add-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .add-toggle-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  .add-toggle-arrow {
+    font-size: 14px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .add-panel.open .add-toggle-arrow { transform: rotate(180deg); }
+
+  .add-body {
+    display: none;
+    padding: 0 16px 28px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .add-panel.open .add-body { display: flex; }
+
+  .input-label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    background: #1c1c1c;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    padding: 13px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus { border-color: var(--gold); }
+
+  .quick-amounts { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .quick-btn {
+    background: #1c1c1c;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 9px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quick-btn:active, .quick-btn.active {
+    background: var(--green);
+    border-color: var(--green-light);
+    color: var(--text);
+  }
+
+  .btn-add {
+    width: 100%;
+    background: var(--gold);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 3px;
+    padding: 15px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-add:active { background: var(--gold-light); transform: scale(0.98); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(160px);
+    background: var(--green);
+    color: var(--text);
+    padding: 11px 22px;
+    border-radius: 30px;
+    font-size: 15px;
+    border: 1px solid var(--green-light);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 999;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(-80px); }
+  .add-panel.open ~ .toast.show,
+  body.panel-open .toast.show { transform: translateX(-50%) translateY(-300px); }
+
+  /* REBUY MODAL */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: #161616;
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 44px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+
+  .btn-cancel {
+    flex: 1;
+    background: var(--border);
+    color: var(--text);
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    padding: 15px;
+    cursor: pointer;
+  }
+
+  .btn-confirm {
+    flex: 2;
+    background: var(--gold);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    padding: 15px;
+    cursor: pointer;
+  }
+  /* SORT */
+  .sort-bar {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .sort-btn {
+    background: #1c1c1c;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 6px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .sort-btn.active {
+    background: var(--green-felt);
+    border-color: var(--green-light);
+    color: var(--text);
+  }
+
+  .sort-arrow { font-size: 10px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div class="header-label">Buy-in<br>Tracker</div>
+    <input class="logo-input" id="logo-input" type="text" maxlength="20" placeholder="Poker Night" spellcheck="false">
+    <div class="suits">♠♥♣♦</div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-val" id="stat-players">0</div>
+      <div class="stat-label">Players</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-pot">$0</div>
+      <div class="stat-label">Total Pot</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-buyins">0</div>
+      <div class="stat-label">Buy-ins</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('players')">♠ PLAYERS</div>
+  <div class="tab" onclick="switchTab('log')">📋 ACTIVITY LOG</div>
+</div>
+
+<!-- Scrollable content -->
+<div class="content-area" id="content-area">
+
+  <!-- Players Tab -->
+  <div class="tab-page active" id="tab-players">
+    <div class="section-head">
+      <div class="section-title">PLAYERS IN</div>
+      <div class="sort-bar">
+        <button class="sort-btn active" id="sort-date" onclick="setSort('date')">
+          <span>Date</span><span class="sort-arrow" id="arr-date">↓</span>
+        </button>
+        <button class="sort-btn" id="sort-name" onclick="setSort('name')">
+          <span>Name</span><span class="sort-arrow" id="arr-name">↓</span>
+        </button>
+        <button class="sort-btn" id="sort-sum" onclick="setSort('sum')">
+          <span>Sum</span><span class="sort-arrow" id="arr-sum">↓</span>
+        </button>
+      </div>
+    </div>
+    <div class="player-list" id="player-list">
+      <div class="empty-state">
+        <span class="big">🃏</span>
+        No players yet.<br>Tap "Add Player" below.
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Tab -->
+  <div class="tab-page" id="tab-log">
+    <div class="section-head">
+      <div class="section-title">ACTIVITY LOG</div>
+      <button class="clear-btn" onclick="clearLog()">CLEAR LOG</button>
+    </div>
+    <div class="log-wrap">
+      <div class="log-list" id="log-list">
+        <div class="log-empty">No activity yet</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Sticky Add Panel -->
+<div class="add-panel" id="add-panel">
+  <div class="add-toggle" onclick="toggleAddPanel()">
+    <div class="add-toggle-label">♠ &nbsp;ADD PLAYER</div>
+    <div class="add-toggle-arrow" id="add-arrow">▲</div>
+  </div>
+  <div class="add-body">
+    <div>
+      <div class="input-label">Player Name</div>
+      <input type="text" id="player-name" placeholder="e.g. Mike" autocomplete="off" maxlength="24">
+    </div>
+    <div>
+      <div class="input-label">Buy-in Amount</div>
+      <input type="number" id="buyin-amount" placeholder="0" min="1" inputmode="numeric">
+    </div>
+    <div>
+      <div class="input-label">Quick Amounts</div>
+      <div class="quick-amounts">
+        <button class="quick-btn" onclick="setAmount(1000, event)">$1000</button>
+        <button class="quick-btn" onclick="setAmount(1500, event)">$1500</button>
+        <button class="quick-btn" onclick="setAmount(2000, event)">$2000</button>
+        <button class="quick-btn" onclick="setAmount(3000, event)">$3000</button>
+        <button class="quick-btn" onclick="setAmount(5000, event)">$5000</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addPlayer()">＋ ADD PLAYER</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Rebuy Modal -->
+<div class="modal-backdrop" id="rebuy-modal">
+  <div class="modal">
+    <div class="modal-title" id="rebuy-title">REBUY — PLAYER</div>
+    <div class="input-label">Amount</div>
+    <input type="number" id="rebuy-amount" placeholder="0" min="1" inputmode="numeric" style="width:100%">
+    <div style="margin-top:10px;">
+      <div class="input-label">Quick</div>
+      <div class="quick-amounts">
+        <button class="quick-btn" onclick="setRebuyAmount(1000)">$1000</button>
+        <button class="quick-btn" onclick="setRebuyAmount(1500)">$1500</button>
+        <button class="quick-btn" onclick="setRebuyAmount(2000)">$2000</button>
+        <button class="quick-btn" onclick="setRebuyAmount(3000)">$3000</button>
+        <button class="quick-btn" onclick="setRebuyAmount(5000)">$5000</button>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmRebuy()">REBUY ♠</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let players = JSON.parse(localStorage.getItem('poker-players') || '[]');
+  let activityLog = JSON.parse(localStorage.getItem('poker-log') || '[]');
+  let rebuyTarget = null;
+  let expandedCards = new Set();
+  let sortKey = 'date';
+  let sortDir = -1; // -1 = desc, 1 = asc
+
+  const EMOJIS = ['🂡','🂱','🃁','🃑','🂢','🂲','🃂','🃒'];
+
+  function save() {
+    localStorage.setItem('poker-players', JSON.stringify(players));
+    localStorage.setItem('poker-log', JSON.stringify(activityLog));
+  }
+
+  function addLog(type, name, amount) {
+    activityLog.unshift({ type, name, amount, ts: Date.now() });
+    if (activityLog.length > 100) activityLog.pop();
+    renderLog();
+  }
+
+  function formatTime(ts) {
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatCurrency(n) {
+    return '$' + n.toLocaleString();
+  }
+
+  // SORT
+  function setSort(key) {
+    if (sortKey === key) {
+      sortDir *= -1;
+    } else {
+      sortKey = key;
+      sortDir = key === 'name' ? 1 : -1;
+    }
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sort-' + key).classList.add('active');
+    ['date','name','sum'].forEach(k => {
+      document.getElementById('arr-' + k).textContent = (k === key) ? (sortDir === -1 ? '↓' : '↑') : '↓';
+    });
+    render();
+  }
+
+  function sortedPlayers() {
+    return [...players].sort((a, b) => {
+      if (sortKey === 'name') return sortDir * a.name.localeCompare(b.name);
+      if (sortKey === 'sum')  return sortDir * (b.total - a.total);
+      if (sortKey === 'date') return sortDir * (b.joinedAt - a.joinedAt);
+      return 0;
+    });
+  }
+
+  // TABS
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab === 'players' && i === 0) || (tab === 'log' && i === 1));
+    });
+    document.getElementById('tab-players').classList.toggle('active', tab === 'players');
+    document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+  }
+
+  // ADD PANEL
+  function toggleAddPanel() {
+    const panel = document.getElementById('add-panel');
+    panel.classList.toggle('open');
+    updatePad();
+  }
+
+  function updatePad() {
+    const panel = document.getElementById('add-panel');
+    const h = panel.getBoundingClientRect().height;
+    document.getElementById('content-area').style.paddingBottom = (h + 8) + 'px';
+  }
+
+  // QUICK AMOUNTS
+  function setAmount(val, e) {
+    document.getElementById('buyin-amount').value = val;
+    document.querySelectorAll('#add-panel .quick-btn').forEach(b => b.classList.remove('active'));
+    if (e) e.target.classList.add('active');
+  }
+
+  function setRebuyAmount(val) {
+    document.getElementById('rebuy-amount').value = val;
+  }
+
+  // TOAST
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ADD PLAYER
+  function addPlayer() {
+    const name = document.getElementById('player-name').value.trim();
+    const amount = parseFloat(document.getElementById('buyin-amount').value);
+    if (!name) { showToast('⚠️ Enter a name'); return; }
+    if (!amount || amount <= 0) { showToast('⚠️ Enter buy-in amount'); return; }
+
+    const now = Date.now();
+    const existing = players.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+    if (existing) {
+      existing.total += amount;
+      existing.buyins.push({ amount, ts: now });
+      addLog('rebuy', name, amount);
+      showToast(`↩ Rebuy for ${name} — ${formatCurrency(amount)}`);
+    } else {
+      const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      players.unshift({ id: now, name, emoji, total: amount, buyins: [{ amount, ts: now }], joinedAt: now });
+      addLog('join', name, amount);
+      showToast(`✓ ${name} joined — ${formatCurrency(amount)}`);
+    }
+
+    save();
+    render();
+    document.getElementById('player-name').value = '';
+    document.getElementById('buyin-amount').value = '';
+    document.querySelectorAll('#add-panel .quick-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  // REMOVE
+  function removePlayer(id) {
+    const p = players.find(p => p.id === id);
+    if (p) addLog('remove', p.name, p.total);
+    players = players.filter(p => p.id !== id);
+    expandedCards.delete(id);
+    save();
+    render();
+  }
+
+  // EXPAND CARD
+  function toggleCard(id) {
+    if (expandedCards.has(id)) {
+      expandedCards.delete(id);
+      document.getElementById('pc-' + id)?.classList.remove('expanded');
+    } else {
+      // close any open card smoothly
+      expandedCards.forEach(openId => {
+        document.getElementById('pc-' + openId)?.classList.remove('expanded');
+      });
+      expandedCards.clear();
+      expandedCards.add(id);
+      document.getElementById('pc-' + id)?.classList.add('expanded');
+    }
+  }
+
+  // REBUY MODAL
+  function openRebuy(id, e) {
+    if (e) e.stopPropagation();
+    rebuyTarget = id;
+    const p = players.find(p => p.id === id);
+    document.getElementById('rebuy-title').textContent = `REBUY — ${p.name.toUpperCase()}`;
+    document.getElementById('rebuy-amount').value = '';
+    document.getElementById('rebuy-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('rebuy-modal').classList.remove('open');
+    rebuyTarget = null;
+  }
+
+  function confirmRebuy() {
+    const amount = parseFloat(document.getElementById('rebuy-amount').value);
+    if (!amount || amount <= 0) { showToast('⚠️ Enter amount'); return; }
+    const p = players.find(p => p.id === rebuyTarget);
+    if (p) {
+      p.total += amount;
+      p.buyins.push({ amount, ts: Date.now() });
+      addLog('rebuy', p.name, amount);
+      save();
+      render();
+      showToast(`↩ ${p.name} rebought — ${formatCurrency(amount)}`);
+    }
+    closeModal();
+  }
+
+  // CLEAR
+  function clearAll() {
+    if (!players.length) return;
+    if (!confirm('Clear all players?')) return;
+    players = [];
+    expandedCards.clear();
+    save();
+    render();
+  }
+
+  function clearLog() {
+    activityLog = [];
+    save();
+    renderLog();
+  }
+
+  // STATS
+  function updateStats() {
+    const totalPot = players.reduce((s, p) => s + p.total, 0);
+    const totalBuyins = players.reduce((s, p) => s + p.buyins.length, 0);
+    document.getElementById('stat-players').textContent = players.length;
+    document.getElementById('stat-pot').textContent = formatCurrency(totalPot);
+    document.getElementById('stat-buyins').textContent = totalBuyins;
+  }
+
+  // RENDER PLAYERS
+  function render() {
+    updateStats();
+    const list = document.getElementById('player-list');
+    if (!players.length) {
+      list.innerHTML = `<div class="empty-state"><span class="big">🃏</span>No players yet.<br>Tap "Add Player" below.</div>`;
+      return;
+    }
+
+    list.innerHTML = sortedPlayers().map(p => {
+      const expanded = expandedCards.has(p.id);
+      const historyRows = p.buyins.map((b, i) => `
+        <div class="history-row">
+          <div class="history-index">${i + 1}</div>
+          <div class="history-label">
+            ${i === 0 ? 'Initial buy-in' : 'Rebuy'}
+            <span class="history-tag${i > 0 ? ' rebuy' : ''}">${i === 0 ? 'BUY-IN' : 'REBUY'}</span>
+          </div>
+          <div class="history-amount">${formatCurrency(b.amount)}</div>
+          <div class="history-time">${formatTime(b.ts)}</div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="player-card${expanded ? ' expanded' : ''}" id="pc-${p.id}">
+          <div class="player-main" onclick="toggleCard(${p.id})">
+            <div class="player-avatar">${p.emoji}</div>
+            <div class="player-info">
+              <div class="player-name">${p.name}</div>
+              <div class="player-meta">In since ${formatTime(p.joinedAt)}</div>
+            </div>
+            <div class="player-right">
+              <div class="player-amount">${formatCurrency(p.total)}</div>
+              <div class="player-buyin-count">${p.buyins.length} buy-in${p.buyins.length !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="expand-arrow">▼</div>
+          </div>
+          <div class="player-history">
+            <div class="history-inner">
+              ${historyRows}
+              <div class="history-actions">
+                <button class="rebuy-btn" onclick="openRebuy(${p.id}, event)">+ REBUY</button>
+                <button class="remove-btn-sm" onclick="removePlayer(${p.id})">REMOVE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // RENDER LOG
+  function renderLog() {
+    const el = document.getElementById('log-list');
+    if (!activityLog.length) {
+      el.innerHTML = '<div class="log-empty">No activity yet</div>';
+      return;
+    }
+    el.innerHTML = activityLog.map(e => {
+      let text = '';
+      if (e.type === 'join')   text = `<span class="log-name">${e.name}</span> joined &mdash; ${formatCurrency(e.amount)}`;
+      if (e.type === 'rebuy')  text = `<span class="log-name">${e.name}</span> rebought &mdash; ${formatCurrency(e.amount)}`;
+      if (e.type === 'remove') text = `<span class="log-name">${e.name}</span> removed from table`;
+      return `<div class="log-entry">
+        <div class="log-dot ${e.type}"></div>
+        <div class="log-text">${text}</div>
+        <div class="log-time">${formatTime(e.ts)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Keyboard
+  document.getElementById('player-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('buyin-amount').focus();
+  });
+  document.getElementById('buyin-amount').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addPlayer();
+  });
+  document.getElementById('rebuy-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('rebuy-modal')) closeModal();
+  });
+
+  // Init
+  render();
+  renderLog();
+  // Load saved title
+  const savedTitle = localStorage.getItem('poker-title');
+  const logoInput = document.getElementById('logo-input');
+  if (savedTitle) logoInput.value = savedTitle;
+  logoInput.addEventListener('input', () => {
+    localStorage.setItem('poker-title', logoInput.value);
+  });
+  setTimeout(updatePad, 60);
+  window.addEventListener('resize', updatePad);
+</script>
+</body>
+</html>
