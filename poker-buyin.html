@@ -88,7 +88,7 @@
     flex-shrink: 0;
   }
 
-  .stats-bar {
+  .stats-bar-inner {
     display: flex;
     margin-top: 12px;
     background: rgba(0,0,0,0.3);
@@ -130,10 +130,10 @@
 
   .tab {
     flex: 1;
-    padding: 14px 0;
+    padding: 9px 0;
     text-align: center;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
+    font-size: 14px;
     letter-spacing: 2px;
     color: var(--muted);
     cursor: pointer;
@@ -591,6 +591,30 @@
   }
 
   .sort-arrow { font-size: 10px; }
+
+  /* STATS TOGGLE */
+  .stats-bar {
+    overflow: hidden;
+    max-height: 60px;
+    transition: max-height 0.3s ease, margin-top 0.3s ease;
+  }
+  .stats-bar.hidden {
+    max-height: 0;
+    margin-top: 0;
+  }
+
+  .stats-toggle {
+    background: none;
+    border: none;
+    color: rgba(201,168,76,0.4);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .stats-toggle:active { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -600,9 +624,13 @@
   <div class="header-top">
     <div class="header-label">Buy-in<br>Tracker</div>
     <input class="logo-input" id="logo-input" type="text" maxlength="20" placeholder="Poker Night" spellcheck="false">
-    <div class="suits">♠♥♣♦</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="stats-toggle" id="stats-toggle" onclick="toggleStats()">▼</button>
+      <div class="suits">♠♥♣♦</div>
+    </div>
   </div>
-  <div class="stats-bar">
+  <div class="stats-bar" id="stats-bar">
+    <div class="stats-bar-inner">
     <div class="stat">
       <div class="stat-val" id="stat-players">0</div>
       <div class="stat-label">Players</div>
@@ -615,13 +643,14 @@
       <div class="stat-val" id="stat-buyins">0</div>
       <div class="stat-label">Buy-ins</div>
     </div>
+    </div>
   </div>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('players')">♠ PLAYERS</div>
-  <div class="tab" onclick="switchTab('log')">📋 ACTIVITY LOG</div>
+  <div class="tab active" onclick="switchTab('players')">PLAYERS</div>
+  <div class="tab" onclick="switchTab('log')">ACTIVITY LOG</div>
 </div>
 
 <!-- Scrollable content -->
@@ -773,6 +802,15 @@
       if (sortKey === 'date') return sortDir * (b.joinedAt - a.joinedAt);
       return 0;
     });
+  }
+
+  // STATS TOGGLE
+  function toggleStats() {
+    const bar = document.getElementById('stats-bar');
+    const btn = document.getElementById('stats-toggle');
+    bar.classList.toggle('hidden');
+    btn.textContent = bar.classList.contains('hidden') ? '▶' : '▼';
+    setTimeout(updatePad, 350);
   }
 
   // TABS
