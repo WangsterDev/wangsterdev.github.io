@@ -1,0 +1,676 @@
+make a visual represntation of dynamic groups for licenses.
+
+License called AAD.License Norway, and dynamic rule (user.country -eq "Norway") and (user.displayName -contains " / Schjødt")
+Mar 24
+
+V
+Connecting to visualize...
+
+Here's the visual breakdown of your dynamic group setup:
+
+The AAD.License Norway license is assigned to a Dynamic Group, which automatically manages its membership based on two combined rules evaluated with a logical AND:
+
+    user.country -eq "Norway" — the user's country attribute must be set to Norway
+    user.displayName -contains " / Schjødt" — the display name must contain  / Schjødt (note the leading space and slash, matching the firm's naming convention)
+
+Only users satisfying both conditions will be members of the group and receive the license automatically. Any user whose attributes change (e.g. country updates or a display name change) will be added or removed dynamically.
+
+do shared mailboxes need licenses
+Mar 24
+Searched the web
+
+Short answer: no, shared mailboxes don't need their own license — but with a few important exceptions.
+
+Per Microsoft's own documentation, the shared mailbox doesn't require a separate license, but to access a shared mailbox, a user must have a licensed Exchange Online mailbox.
+Microsoft Learn
+So the mailbox itself is free; the people using it still need their regular licenses.
+
+When a license IS required on the shared mailbox:
+
+    Over 50 GB storage — needs Exchange Online Plan 2, or Plan 1 + Exchange Online Archiving add-on
+    In-place archiving — same license requirement as above
+    Litigation hold — requires Exchange Online Plan 2 or Plan 1 + Archiving add-on
+    Advanced features — things like Defender for Office 365, Purview eDiscovery, or retention policies may require additional licenses
+    Microsoft Learn
+
+One thing to watch: if sign-in is enabled on a shared mailbox (which it is by default when created), assigning an Exchange Online license is a mandatory requirement — otherwise it's a violation of Microsoft's licensing terms.
+O365 Reports
+Best practice is to block sign-in on shared mailboxes rather than license them.
+
+So for your Schjødt environment: shared mailboxes used as team inboxes (support@, info@, etc.) under 50 GB with sign-in blocked are completely free to run — no need to include them in your AAD.License Norway dynamic group.
+
+back to the diagram, is it possible to make not-equals an extensionattributeX = NoLicense?
+
+so if the extension is true, then they are excluded from the dynamic group
+Mar 24
+
+Yes, absolutely — Azure AD dynamic group rules support -ne (not equals) for extension attributes. The rule would look like:
+
+(user.extensionAttribute1 -ne "NoLicense")
+
+Combined with your existing rules using AND, the full rule would be:
+
+(user.country -eq "Norway") and (user.displayName -contains " / Schjødt") and (user.extensionAttribute1 -ne "NoLicense")
+
+V
+Connecting to visualize...
+
+The updated diagram adds the exclusion rule as a third AND condition in red. A few practical notes:
+
+Which extension attribute to use — extensionAttribute1 through extensionAttribute15 are all available. Pick one that isn't already in use in your tenant. You can check via PowerShell:
+powershell
+
+Get-MgUser -UserId "user@domain.com" -Property onPremisesExtensionAttributes | Select -ExpandProperty onPremisesExtensionAttributes
+
+How to set the value on a user to exclude them:
+powershell
+
+Update-MgUser -UserId "user@domain.com" -OnPremisesExtensionAttributes @{extensionAttribute1 = "NoLicense"}
+
+One caveat — -ne in Azure AD dynamic rules also matches users where the attribute is null (not set). So any user without extensionAttribute1 set at all will still be included, which is likely what you want. Only users explicitly set to "NoLicense" will be excluded.
+
+can you make the text editable for me?
+Mar 24
+
+All fields are now editable — the diagram and the full rule string at the bottom update live as you type. You can change the license name, any attribute, operator, or value across all three rules.
+
+can you make a tree diagram software for me? html
+Mar 24
+Viewed a file, created a file, read a file
+
+Here's your tree diagram builder. It comes pre-loaded with a Schjødt example you can build on. Here's what it can do:
+
+Editing
+
+    Click any node to select it — edit its label, sublabel, and colour in the sidebar
+    Click the + button under any node to add a child
+    Delete/Backspace removes the selected node and all its descendants
+    Enter adds a child to the selected node
+
+Layout
+
+    Toggle between top–down and left–right layouts
+    Auto layout automatically spaces everything out neatly
+    Drag any node manually to reposition it
+
+Navigation
+
+    Click and drag the canvas background to pan
+    Scroll to zoom in/out
+    Reset view to snap back to 100%
+
+Export
+
+    The export button gives you a JSON snapshot of the full tree structure
+
+Tree diagram
+Code · HTML 
+
+can you make it more snappy to the grid, and give it arrows that point
+Mar 24
+Created 2 files, viewed a file, ran a command
+
+Two upgrades in this version:
+
+Grid snapping — nodes now snap to the 28px dot grid on mouse release. You'll see a brief "snapped ⊞" pill flash at the bottom to confirm. The auto-layout also places everything on exact grid coordinates, so the whole diagram stays tidy. Nodes animate smoothly into their snapped position.
+
+Arrowheads — connectors now have a pointed arrowhead at the child end. Each connector picks up the node's colour when you've set one (so a teal node gets a teal arrow), and falls back to a subtle grey for default nodes.
+Tree diagram
+Code · HTML 
+
+can you just rewamp it? i like the design, but rmove the whole smartness to the left tab.
+
+I just want a visual click and drag box and write title and sub text
+11:08 AM
+Created 2 files, ran a command, read a file
+
+Much cleaner now — the sidebar is completely gone. Here's how it works:
+
+    Double-click any node to open a small popover right next to it — type your title, subtext, and pick a colour
+    Click the + button under any node to add a child (opens the editor immediately)
+    Click + add node in the toolbar to drop a new root node in the centre
+    Drag nodes freely — they snap to the grid on release
+    Delete/Backspace removes the selected node and all its children
+    Scroll to zoom, drag the background to pan
+
+Tree diagram
+Code · HTML 
+
+can you make a button to change the background to a lgiht mode as well? also dont start the app with anything, just one blank node works.
+12:46 PM
+Viewed a file, ran a command, created a file
+
+Done. Two changes:
+
+    ☀︎ / ☾ button in the top-right toggles between dark and light mode — everything transitions smoothly including the canvas, nodes, editor popover, and connectors
+    Starts with a single blank node centred on the canvas — double-click it to start typing
+
+Tree diagram
+Code · HTML 
+You are out of free messages until 3:00 PM
+Upgrade
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+Tree diagram · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tree Diagram</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap');
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  :root {
+    --bg:          #0f0f0f;
+    --surface:     #181818;
+    --surface2:    #222222;
+    --border:      #2a2a2a;
+    --border2:     #383838;
+    --text:        #e8e4dc;
+    --text2:       #888;
+    --text3:       #555;
+    --accent:      #c8b97a;
+    --accent2:     #8fb3a0;
+    --node-bg:     #1e1e1e;
+    --node-border: #333;
+    --danger:      #c87a7a;
+    --dot-grid:    #272727;
+    --radius: 8px;
+  }
+ 
+  body.light {
+    --bg:          #f5f3ef;
+    --surface:     #ffffff;
+    --surface2:    #f0ede8;
+    --border:      #e0dcd4;
+    --border2:     #ccc8c0;
+    --text:        #1a1a18;
+    --text2:       #666;
+    --text3:       #aaa;
+    --accent:      #a8932a;
+    --accent2:     #3a7a60;
+    --node-bg:     #ffffff;
+    --node-border: #d0ccc4;
+    --danger:      #b05050;
+    --dot-grid:    #dedad2;
+  }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+    transition: background 0.2s, color 0.2s;
+  }
+ 
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .brand {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+    margin-right: 8px;
+  }
+  .sep { width: 1px; height: 20px; background: var(--border2); margin: 0 4px; }
+  .spacer { flex: 1; }
+ 
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .btn:hover { background: var(--surface2); color: var(--text); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: var(--accent); color: var(--bg); }
+  .btn.ghost { border-color: transparent; color: var(--text3); }
+  .btn.ghost:hover { border-color: var(--danger); color: var(--danger); background: transparent; }
+ 
+  /* theme toggle */
+  #theme-btn {
+    width: 30px; height: 30px; padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    font-size: 14px;
+  }
+ 
+  #canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    background-image: radial-gradient(circle at 1px 1px, var(--dot-grid) 1px, transparent 0);
+    background-size: 28px 28px;
+    transition: background-color 0.2s;
+  }
+  #canvas  { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  #svg-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; overflow: visible;
+  }
+ 
+  /* NODE */
+  .node {
+    position: absolute;
+    background: var(--node-bg);
+    border: 1.5px solid var(--node-border);
+    border-radius: 10px;
+    padding: 11px 16px 18px;
+    cursor: grab;
+    min-width: 120px; max-width: 200px;
+    text-align: center;
+    transition: border-color 0.12s, box-shadow 0.12s,
+                background 0.2s,
+                left 0.07s ease-out, top 0.07s ease-out;
+  }
+  .node:active { cursor: grabbing; }
+  .node.dragging { transition: background 0.2s !important; z-index: 20; }
+  .node.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(200,185,122,0.15); z-index: 10; }
+  .node.is-root  { border-color: var(--accent2); }
+ 
+  .node-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--text); word-break: break-word;
+    line-height: 1.4; pointer-events: none;
+    transition: color 0.2s;
+  }
+  .node-sub {
+    font-size: 10px; color: var(--text2);
+    margin-top: 3px; word-break: break-word;
+    line-height: 1.4; pointer-events: none;
+    transition: color 0.2s;
+  }
+  .color-dot {
+    position: absolute; top: 6px; right: 7px;
+    width: 7px; height: 7px; border-radius: 50%;
+    cursor: pointer; transition: transform 0.1s; z-index: 3;
+  }
+  .color-dot:hover { transform: scale(1.5); }
+  .add-btn {
+    position: absolute; bottom: -13px; left: 50%;
+    transform: translateX(-50%);
+    width: 22px; height: 22px;
+    background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px; line-height: 1;
+    color: var(--text3); transition: all 0.15s; z-index: 5;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+ 
+  /* EDITOR POPOVER */
+  #editor {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 14px;
+    width: 210px;
+    z-index: 200;
+    display: none;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  #editor.open { display: block; }
+  .ed-row { margin-bottom: 8px; }
+  .ed-lbl { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .ed-inp {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border2); color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    padding: 5px 8px; border-radius: var(--radius);
+    outline: none; transition: border-color 0.15s, background 0.2s, color 0.2s; resize: none;
+  }
+  .ed-inp:focus { border-color: var(--accent); }
+  textarea.ed-inp { height: 54px; }
+  .ed-swatches { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ed-sw {
+    width: 18px; height: 18px; border-radius: 4px; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s;
+  }
+  .ed-sw:hover { transform: scale(1.2); }
+  .ed-sw.on { border-color: var(--text); }
+  .ed-foot { display: flex; gap: 6px; }
+  .ed-foot .btn { flex: 1; justify-content: center; font-size: 11px; }
+ 
+  /* ZOOM */
+  #zoom-controls {
+    position: absolute; bottom: 16px; right: 16px;
+    display: flex; flex-direction: column; gap: 4px; z-index: 50;
+  }
+  .zoom-btn {
+    width: 28px; height: 28px; background: var(--surface);
+    border: 1px solid var(--border2); color: var(--text2);
+    border-radius: var(--radius); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.15s;
+  }
+  .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+  #zoom-lbl { font-size: 10px; color: var(--text3); text-align: center; }
+ 
+  #snap-pill {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--accent); background: var(--surface);
+    border: 1px solid var(--border2); padding: 3px 12px; border-radius: 20px;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+  }
+</style>
+</head>
+<body>
+ 
+<div id="toolbar">
+  <span class="brand">tree</span>
+  <div class="sep"></div>
+  <button class="btn primary" onclick="addRoot()">+ add node</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="resetView()">⊙ fit view</button>
+  <div class="spacer"></div>
+  <span style="font-size:10px;color:var(--text3);">double-click to edit &nbsp;·&nbsp; + to add child &nbsp;·&nbsp; del to remove</span>
+  <div class="sep"></div>
+  <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light / dark">☀︎</button>
+</div>
+ 
+<div id="canvas-wrap">
+  <svg id="svg-layer"><defs></defs></svg>
+  <div id="canvas"></div>
+ 
+  <div id="editor">
+    <div class="ed-row">
+      <div class="ed-lbl">Title</div>
+      <input id="ed-title" class="ed-inp" placeholder="Node title" />
+    </div>
+    <div class="ed-row">
+      <div class="ed-lbl">Subtext</div>
+      <textarea id="ed-sub" class="ed-inp" placeholder="Optional…"></textarea>
+    </div>
+    <div class="ed-row">
+      <div class="ed-lbl">Colour</div>
+      <div class="ed-swatches" id="ed-swatches"></div>
+    </div>
+    <div class="ed-foot">
+      <button class="btn" onclick="closeEd()">done</button>
+      <button class="btn ghost" onclick="delEd()">delete</button>
+    </div>
+  </div>
+ 
+  <div id="snap-pill">snapped ⊞</div>
+ 
+  <div id="zoom-controls">
+    <button class="zoom-btn" onclick="doZoom(0.15)">+</button>
+    <div id="zoom-lbl">100%</div>
+    <button class="zoom-btn" onclick="doZoom(-0.15)">−</button>
+  </div>
+</div>
+ 
+<script>
+const GRID=28, NW=150, NH=56;
+const COLS=[null,'#c8b97a','#8fb3a0','#b08fa0','#7a9cc8','#c8957a','#9ab87a','#c87a7a'];
+ 
+let nodes={}, nid=1, sel=null, editId=null;
+let sc=1, tx=0, ty=0;
+let isLight=false;
+ 
+const wrap=document.getElementById('canvas-wrap');
+const cv  =document.getElementById('canvas');
+const svgl=document.getElementById('svg-layer');
+const ed  =document.getElementById('editor');
+const pill=document.getElementById('snap-pill');
+let st;
+ 
+const sn=v=>Math.round(v/GRID)*GRID;
+const uid=()=>'n'+(nid++);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+ 
+/* ── theme ── */
+function toggleTheme(){
+  isLight=!isLight;
+  document.body.classList.toggle('light', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '☾' : '☀︎';
+}
+ 
+/* ── node create ── */
+function mkNode(title,pid,x,y){
+  const id=uid();
+  nodes[id]={id,title:title||'Node',sub:'',color:null,parentId:pid||null,children:[],x:sn(x||200),y:sn(y||100)};
+  if(pid&&nodes[pid]) nodes[pid].children.push(id);
+  paint(id); wires(); return id;
+}
+ 
+function paint(id){
+  const n=nodes[id];
+  let el=document.getElementById('nd-'+id);
+  if(!el){
+    el=document.createElement('div');
+    el.id='nd-'+id;
+    cv.appendChild(el);
+    drag(el,id);
+    el.addEventListener('dblclick',e=>{e.stopPropagation();openEd(id);});
+    el.addEventListener('click',e=>{e.stopPropagation();pick(id);});
+  }
+  const bc=n.color?n.color:(!n.parentId?'var(--accent2)':sel===id?'var(--accent)':'var(--node-border)');
+  el.className='node'+(sel===id?' selected':'')+(n.parentId?'':' is-root');
+  el.style.cssText=`left:${n.x}px;top:${n.y}px;border-color:${bc}`;
+  el.innerHTML=`
+    <div class="node-title">${esc(n.title)}</div>
+    ${n.sub?`<div class="node-sub">${esc(n.sub)}</div>`:''}
+    <div class="color-dot" style="background:${n.color||'var(--border2)'}" onclick="event.stopPropagation();openEd('${id}')"></div>
+    <div class="add-btn" onclick="event.stopPropagation();addChild('${id}')">+</div>
+  `;
+}
+ 
+function rmEl(id){
+  const e=document.getElementById('nd-'+id); if(e) e.remove();
+  const m=svgl.querySelector('#arr-'+id);    if(m) m.remove();
+}
+ 
+/* ── connectors ── */
+function mkMarker(id,col){
+  const mid='arr-'+id;
+  let m=svgl.querySelector('#'+mid);
+  if(!m){
+    m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    m.setAttribute('id',mid); m.setAttribute('markerWidth','9'); m.setAttribute('markerHeight','7');
+    m.setAttribute('refX','8'); m.setAttribute('refY','3.5'); m.setAttribute('orient','auto');
+    const p=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    p.setAttribute('points','0 0, 9 3.5, 0 7'); m.appendChild(p);
+    svgl.querySelector('defs').appendChild(m);
+  }
+  m.querySelector('polygon').setAttribute('fill',col);
+  return mid;
+}
+ 
+function wires(){
+  svgl.querySelectorAll('path').forEach(e=>e.remove());
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId) return;
+    const p=nodes[n.parentId]; if(!p) return;
+    const pe=document.getElementById('nd-'+p.id), ce=document.getElementById('nd-'+n.id);
+    if(!pe||!ce) return;
+    const pw=pe.offsetWidth||NW, ph=pe.offsetHeight||NH, cw=ce.offsetWidth||NW;
+    const x1=p.x+pw/2, y1=p.y+ph, x2=n.x+cw/2, y2=n.y+1;
+    const my=(y1+y2)/2;
+    const stroke=n.color?n.color+'bb':(isLight?'#b0aa9e':'#404040');
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+    path.setAttribute('fill','none'); path.setAttribute('stroke',stroke); path.setAttribute('stroke-width','1.5');
+    path.setAttribute('marker-end',`url(#${mkMarker(n.id,stroke)})`);
+    svgl.appendChild(path);
+  });
+}
+ 
+/* ── drag + snap ── */
+function drag(el,id){
+  let mx,my,ox,oy,on=false;
+  el.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('add-btn')||e.target.classList.contains('color-dot')) return;
+    e.preventDefault(); e.stopPropagation();
+    on=true; mx=e.clientX; my=e.clientY; ox=nodes[id].x; oy=nodes[id].y;
+    el.classList.add('dragging');
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!on) return;
+    nodes[id].x=ox+(e.clientX-mx)/sc; nodes[id].y=oy+(e.clientY-my)/sc;
+    el.style.left=nodes[id].x+'px'; el.style.top=nodes[id].y+'px';
+    wires(); posEd();
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!on) return; on=false; el.classList.remove('dragging');
+    const sx=sn(nodes[id].x), sy=sn(nodes[id].y);
+    const mv=Math.abs(sx-nodes[id].x)+Math.abs(sy-nodes[id].y);
+    nodes[id].x=sx; nodes[id].y=sy;
+    el.style.left=sx+'px'; el.style.top=sy+'px';
+    wires(); posEd();
+    if(mv>2){pill.style.opacity='1'; clearTimeout(st); st=setTimeout(()=>pill.style.opacity='0',700);}
+  });
+}
+ 
+/* ── selection ── */
+function pick(id){
+  if(sel&&sel!==id){const e=document.getElementById('nd-'+sel);if(e)e.classList.remove('selected');paint(sel);}
+  sel=id; if(id) paint(id);
+}
+cv.addEventListener('click',()=>{pick(null);closeEd();});
+ 
+/* ── editor ── */
+function openEd(id){
+  pick(id); editId=id;
+  const n=nodes[id];
+  document.getElementById('ed-title').value=n.title==='Node'?'':n.title;
+  document.getElementById('ed-sub').value=n.sub||'';
+  buildSw(n.color);
+  ed.classList.add('open');
+  posEd();
+  const ti=document.getElementById('ed-title');
+  ti.focus(); ti.select();
+}
+ 
+function posEd(){
+  if(!editId||!ed.classList.contains('open')) return;
+  const n=nodes[editId];
+  const el=document.getElementById('nd-'+editId);
+  const ew=(el?el.offsetWidth:NW)*sc;
+  const ww=wrap.offsetWidth, wh=wrap.offsetHeight;
+  const edW=220, edH=260;
+  let lx=n.x*sc+tx+ew+10;
+  let ly=n.y*sc+ty;
+  if(lx+edW>ww-10) lx=n.x*sc+tx-edW-10;
+  if(ly+edH>wh-10) ly=wh-edH-10;
+  if(ly<10) ly=10;
+  ed.style.left=lx+'px'; ed.style.top=ly+'px';
+}
+ 
+function buildSw(active){
+  const c=document.getElementById('ed-swatches'); c.innerHTML='';
+  COLS.forEach(col=>{
+    const d=document.createElement('div');
+    d.className='ed-sw'+(active===col?' on':'');
+    d.style.background=col||'var(--node-border)';
+    d.onclick=()=>{ if(editId){nodes[editId].color=col; paint(editId); wires(); buildSw(col);} };
+    c.appendChild(d);
+  });
+}
+ 
+document.getElementById('ed-title').addEventListener('input',e=>{
+  if(!editId) return;
+  nodes[editId].title=e.target.value||'Node';
+  paint(editId); wires();
+});
+document.getElementById('ed-sub').addEventListener('input',e=>{
+  if(!editId) return; nodes[editId].sub=e.target.value; paint(editId); wires();
+});
+ 
+function closeEd(){ ed.classList.remove('open'); editId=null; }
+function delEd(){ const id=editId; closeEd(); if(id) delNode(id); }
+ 
+/* ── add nodes ── */
+function addRoot(){
+  const cx=(wrap.offsetWidth/2-tx)/sc-NW/2;
+  const cy=(wrap.offsetHeight/2-ty)/sc-NH/2;
+  const id=mkNode('Node',null,cx,cy);
+  openEd(id);
+}
+function addChild(pid){
+  const p=nodes[pid]; if(!p) return;
+  const el=document.getElementById('nd-'+pid);
+  const ph=el?el.offsetHeight:NH;
+  const id=mkNode('Node',pid,p.x,p.y+ph+GRID*4);
+  openEd(id);
+}
+ 
+/* ── delete ── */
+function delNode(id){
+  if(!nodes[id]) return;
+  [...nodes[id].children].forEach(delNode);
+  if(nodes[id].parentId&&nodes[nodes[id].parentId])
+    nodes[nodes[id].parentId].children=nodes[nodes[id].parentId].children.filter(c=>c!==id);
+  rmEl(id); delete nodes[id];
+  if(sel===id) sel=null;
+  wires();
+}
+ 
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if((e.key==='Delete'||e.key==='Backspace')&&sel){ delNode(sel); sel=null; }
+  if(e.key==='Escape'){pick(null);closeEd();}
+});
+ 
+/* ── pan + zoom ── */
+let pan=false,psx,psy,ptx,pty;
+wrap.addEventListener('mousedown',e=>{
+  if(e.target===cv||e.target===wrap||e.target===svgl||e.target.tagName==='path'||e.target.tagName==='svg'){
+    pan=true; psx=e.clientX; psy=e.clientY; ptx=tx; pty=ty;
+  }
+});
+document.addEventListener('mousemove',e=>{
+  if(!pan) return; tx=ptx+(e.clientX-psx); ty=pty+(e.clientY-psy); applyT();
+});
+document.addEventListener('mouseup',()=>pan=false);
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault(); sc=Math.min(2,Math.max(0.25,sc-e.deltaY*0.001)); applyT(); posEd();
+},{passive:false});
+ 
+function applyT(){
+  const t=`translate(${tx}px,${ty}px) scale(${sc})`;
+  cv.style.transform=svgl.style.transform=t;
+  cv.style.transformOrigin=svgl.style.transformOrigin='0 0';
+  document.getElementById('zoom-lbl').textContent=Math.round(sc*100)+'%';
+}
+function doZoom(d){ sc=Math.min(2,Math.max(0.25,sc+d)); applyT(); posEd(); }
+function resetView(){ sc=1; tx=0; ty=0; applyT(); }
+ 
+/* ── start with one blank node ── */
+(()=>{
+  const cx=wrap.offsetWidth/2-NW/2 || 300;
+  const cy=wrap.offsetHeight/2-NH/2 || 200;
+  mkNode('Node',null,cx,cy);
+})();
+</script>
+</body>
+</html>
+ 
+
