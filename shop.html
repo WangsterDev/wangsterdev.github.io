@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WangsterShop — Trading Card Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0a0b0e;
+  --bg2:      #0f1116;
+  --bg3:      #151820;
+  --border:   #1e2230;
+  --border2:  #2a2f42;
+  --text:     #ccd6f6;
+  --muted:    #4a5578;
+  --accent:   #00d4ff;
+  --accent2:  #ff6b35;
+  --gold:     #ffd700;
+  --rare:     #b06dff;
+  --green:    #00e676;
+  --red:      #ff3d3d;
+  --glow:     rgba(0,212,255,0.15);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  cursor: default;
+}
+
+/* scanline overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1000;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,11,14,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  height: 64px;
+}
+
+.nav-logo {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 1.3rem;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  text-decoration: none;
+  text-shadow: 0 0 20px rgba(0,212,255,0.5);
+}
+
+.nav-logo span { color: var(--accent2); }
+
+.nav-links {
+  display: flex; gap: 32px; list-style: none;
+}
+
+.nav-links a {
+  text-decoration: none; color: var(--muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute; bottom: -4px; left: 0; right: 0;
+  height: 1px; background: var(--accent);
+  transform: scaleX(0); transition: transform 0.2s;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-links a:hover::after { transform: scaleX(1); }
+
+.nav-right { display: flex; align-items: center; gap: 16px; }
+
+.search-bar {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); padding: 8px 16px;
+  font-family: 'Inter', sans-serif; font-size: 0.8rem;
+  width: 200px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-bar::placeholder { color: var(--muted); }
+.search-bar:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,212,255,0.15); }
+
+.cart-btn {
+  position: relative; background: transparent;
+  border: 1px solid var(--accent); color: var(--accent);
+  cursor: pointer; padding: 8px 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+  transition: all 0.2s;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+.cart-btn:hover {
+  background: var(--accent); color: var(--bg);
+  box-shadow: 0 0 20px rgba(0,212,255,0.4);
+}
+
+.cart-count {
+  background: var(--accent2); color: #fff;
+  border-radius: 2px; width: 20px; height: 20px;
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; transition: transform 0.2s;
+}
+.cart-count.bump { transform: scale(1.5); }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 500px;
+  display: flex; align-items: center;
+  padding: 60px 40px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 80% 50%, rgba(0,212,255,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 20% 80%, rgba(176,109,255,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+}
+
+/* animated grid lines */
+.hero-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.4;
+  mask-image: linear-gradient(135deg, transparent 20%, black 50%, transparent 80%);
+}
+
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: 560px;
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--accent); color: var(--accent);
+  padding: 4px 14px; font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; margin-bottom: 24px;
+}
+
+.hero-tag::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--accent); border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+}
+
+.hero-title .line2 {
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(0,212,255,0.5);
+}
+
+.hero-title .line3 { color: var(--muted); font-size: 0.7em; }
+
+.hero-sub {
+  color: var(--muted); font-size: 0.95rem; line-height: 1.7;
+  margin-bottom: 36px; max-width: 440px;
+}
+
+.hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.btn-primary {
+  background: var(--accent); color: var(--bg);
+  border: none; padding: 13px 32px; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.88rem;
+  font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: all 0.2s; text-decoration: none; display: inline-block;
+}
+.btn-primary:hover { box-shadow: 0 0 24px rgba(0,212,255,0.6); transform: translateY(-2px); }
+
+.btn-secondary {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border2); padding: 12px 32px; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.88rem;
+  font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: all 0.2s; text-decoration: none; display: inline-block;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.hero-stats {
+  position: absolute; right: 40px; bottom: 40px; z-index: 2;
+  display: flex; gap: 32px;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Orbitron', monospace; font-size: 1.6rem; font-weight: 700;
+  color: var(--accent); line-height: 1;
+}
+.stat-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+/* ── FILTERS ── */
+.filters-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+
+.filter-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); margin-right: 8px;
+}
+
+.filter-btn {
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--muted); padding: 6px 16px; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(0,212,255,0.07);
+}
+
+.rarity-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+}
+
+/* ── SECTION ── */
+.section-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 48px 40px 28px;
+}
+
+.section-eyebrow {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.72rem;
+  font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Orbitron', monospace; font-size: 1.5rem; font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.view-all {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--border2);
+  padding-bottom: 2px; transition: all 0.2s;
+}
+.view-all:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── PRODUCT GRID ── */
+.products {
+  padding: 0 40px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  animation: fadeUp 0.5s ease both;
+  cursor: pointer;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,212,255,0.1);
+}
+
+.card.rare:hover   { border-color: var(--rare);  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(176,109,255,0.2); }
+.card.gold:hover   { border-color: var(--gold);  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.2); }
+.card.common:hover { border-color: var(--green); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,230,118,0.1); }
+
+/* corner cuts */
+.card::before, .card::after {
+  content: ''; position: absolute;
+  width: 0; height: 0;
+}
+.card::before { top: 0; right: 0; border-top: 12px solid var(--bg3); border-left: 12px solid transparent; }
+.card::after  { bottom: 0; left: 0; border-bottom: 12px solid var(--bg3); border-right: 12px solid transparent; }
+
+.card-img {
+  aspect-ratio: 5/7;
+  background: var(--bg3);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; position: relative; overflow: hidden;
+}
+
+/* shimmer effect on hover */
+.card-img::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.card:hover .card-img::after { transform: translateX(100%); }
+
+.card-img-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: var(--muted); z-index: 1;
+}
+
+.card-img-inner svg { opacity: 0.25; }
+.card-img-inner span { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.rarity-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.rarity-bar.common { background: var(--green); }
+.rarity-bar.rare   { background: linear-gradient(90deg, var(--rare), #7b2fff); }
+.rarity-bar.gold   { background: linear-gradient(90deg, var(--gold), #ff9d00); }
+.rarity-bar.epic   { background: linear-gradient(90deg, var(--accent2), #ff0066); }
+
+.card-badge {
+  position: absolute; top: 10px; left: 10px;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.62rem;
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; z-index: 2;
+}
+.card-badge.hot   { background: var(--accent2); color: #fff; }
+.card-badge.new   { background: var(--accent);  color: var(--bg); }
+.card-badge.sale  { background: var(--red);     color: #fff; }
+.card-badge.foil  { background: linear-gradient(135deg, var(--gold), #ff6b35); color: var(--bg); }
+
+.stock-chip {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; font-family: 'Rajdhani', sans-serif; font-weight: 700; z-index: 2;
+}
+.stock-chip.low  { background: rgba(255,61,61,0.15); color: var(--red);   border: 1px solid rgba(255,61,61,0.3); }
+.stock-chip.ok   { background: rgba(0,230,118,0.1);  color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+
+.card-body {
+  padding: 14px 16px 16px;
+  display: flex; flex-direction: column; gap: 6px; flex: 1;
+}
+
+.card-game {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
+  font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+  font-weight: 700; line-height: 1.2; color: var(--text);
+}
+
+.card-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.68rem; color: var(--muted);
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.card-rarity {
+  display: flex; align-items: center; gap: 5px;
+}
+
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+}
+
+.card-price {
+  display: flex; flex-direction: column;
+}
+
+.price-main {
+  font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 700;
+  color: var(--accent); line-height: 1;
+}
+
+.price-old {
+  font-size: 0.7rem; color: var(--muted); text-decoration: line-through;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.add-btn {
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--muted); width: 36px; height: 36px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0;
+  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.add-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.add-btn.added { background: var(--green); border-color: var(--green); color: var(--bg); }
+
+/* ── DEALS BANNER ── */
+.deals-banner {
+  margin: 0 40px 60px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent2);
+  display: grid; grid-template-columns: 1fr 1fr;
+  overflow: hidden; position: relative;
+}
+
+.deals-banner::before {
+  content: '';
+  position: absolute; left: 50%; top: -40%; bottom: -40%;
+  width: 1px; background: var(--border);
+}
+
+.deal-side {
+  padding: 40px 48px; display: flex; flex-direction: column; gap: 14px;
+}
+
+.deal-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.72rem;
+  font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent2);
+}
+
+.deal-title {
+  font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 700;
+  line-height: 1.2;
+}
+
+.deal-sub { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+
+.deal-img {
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 280px;
+}
+
+.img-placeholder-dark {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  color: var(--muted); font-size: 0.62rem;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 20px;
+}
+.img-placeholder-dark svg { opacity: 0.2; }
+
+/* ── CART DRAWER ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.cart-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 420px; max-width: 100vw;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 300;
+  transform: translateX(100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+.cart-drawer.open { transform: translateX(0); }
+
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.drawer-title {
+  font-family: 'Orbitron', monospace; font-size: 1rem;
+  font-weight: 700; letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.close-btn {
+  background: none; border: 1px solid var(--border2); cursor: pointer;
+  color: var(--muted); width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; transition: all 0.2s;
+}
+.close-btn:hover { border-color: var(--red); color: var(--red); }
+
+.drawer-items {
+  flex: 1; overflow-y: auto; padding: 20px 28px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.drawer-items::-webkit-scrollbar { width: 4px; }
+.drawer-items::-webkit-scrollbar-track { background: var(--bg3); }
+.drawer-items::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.cart-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%; gap: 14px; color: var(--muted);
+  font-family: 'Rajdhani', sans-serif; font-size: 0.85rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.cart-empty svg { opacity: 0.2; }
+
+.cart-item {
+  display: grid; grid-template-columns: 60px 1fr auto;
+  gap: 14px; align-items: start;
+  padding: 14px; background: var(--bg3);
+  border: 1px solid var(--border);
+}
+
+.ci-img {
+  width: 60px; aspect-ratio: 5/7;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.4rem; color: var(--muted); text-align: center;
+  letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid var(--border);
+}
+
+.ci-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.92rem;
+  font-weight: 700; color: var(--text); margin-bottom: 4px;
+}
+.ci-game { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.ci-price { font-family: 'Orbitron', monospace; font-size: 0.9rem; color: var(--accent); margin-top: 8px; }
+
+.qty-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+
+.qty-btn {
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text); width: 24px; height: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; transition: all 0.15s;
+}
+.qty-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.qty-val { font-family: 'Orbitron', monospace; font-size: 0.8rem; min-width: 16px; text-align: center; }
+
+.rm-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 0.9rem; transition: color 0.2s;
+  padding: 2px;
+}
+.rm-btn:hover { color: var(--red); }
+
+.drawer-footer {
+  padding: 20px 28px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.sub-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px;
+}
+.sub-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.sub-amount {
+  font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 700;
+  color: var(--accent);
+}
+
+.checkout-btn {
+  width: 100%; background: var(--accent); color: var(--bg);
+  border: none; padding: 14px; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.88rem;
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: all 0.2s;
+}
+.checkout-btn:hover { box-shadow: 0 0 24px rgba(0,212,255,0.5); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 48px 40px 24px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+footer h4 {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.72rem;
+  font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 16px;
+}
+
+footer ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+footer ul a {
+  color: var(--muted); text-decoration: none;
+  font-size: 0.82rem; transition: color 0.2s;
+  font-family: 'Rajdhani', sans-serif; font-weight: 500; letter-spacing: 0.04em;
+}
+footer ul a:hover { color: var(--accent); }
+
+.footer-logo {
+  font-family: 'Orbitron', monospace; font-weight: 900;
+  font-size: 1.4rem; color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,212,255,0.4);
+  margin-bottom: 12px;
+}
+.footer-logo span { color: var(--accent2); }
+.footer-desc { color: var(--muted); font-size: 0.82rem; line-height: 1.7; max-width: 240px; }
+
+.footer-bottom {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.72rem; color: var(--muted);
+  font-family: 'Rajdhani', sans-serif; letter-spacing: 0.06em;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bg3); border: 1px solid var(--accent);
+  color: var(--accent); padding: 10px 28px;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.8rem;
+  font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  z-index: 500; pointer-events: none; white-space: nowrap;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 20px rgba(0,212,255,0.2);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  .hero { padding: 48px 20px; }
+  .hero-stats { display: none; }
+  .filters-bar { padding: 14px 20px; }
+  .section-header { padding: 40px 20px 20px; }
+  .products { padding: 0 20px 48px; }
+  .deals-banner { grid-template-columns: 1fr; margin: 0 20px 48px; }
+  .deals-banner::before { display: none; }
+  footer { grid-template-columns: 1fr 1fr; padding: 36px 20px 20px; }
+  .footer-bottom { padding: 14px 20px; }
+}
+
+@media (max-width: 560px) {
+  .nav-links { display: none; }
+  .search-bar { display: none; }
+  footer { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">VAULT<span>EX</span></a>
+  <ul class="nav-links">
+    <li><a href="#shop">Shop</a></li>
+    <li><a href="#">Packs</a></li>
+    <li><a href="#">Singles</a></li>
+    <li><a href="#">Graded</a></li>
+    <li><a href="#">Sell</a></li>
+  </ul>
+  <div class="nav-right">
+    <input class="search-bar" type="text" placeholder="Search cards, sets, games…">
+    <button class="cart-btn" onclick="openCart()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Live inventory updated daily</div>
+    <h1 class="hero-title">
+      <div>THE ULTIMATE</div>
+      <div class="line2">CARD VAULT</div>
+      <div class="line3">Thousands of singles in stock</div>
+    </h1>
+    <p class="hero-sub">From bulk commons to PSA 10 graded legendaries — we stock every set, every rarity, every game. Shipped same day.</p>
+    <div class="hero-btns">
+      <a href="#shop" class="btn-primary">Browse Cards</a>
+      <a href="#" class="btn-secondary">Sell Your Cards</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">40K+</div><div class="stat-label">Singles</div></div>
+    <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Positive</div></div>
+    <div class="stat"><div class="stat-num">1-Day</div><div class="stat-label">Shipping</div></div>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filters-bar">
+  <span class="filter-label">Game:</span>
+  <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+  <button class="filter-btn" onclick="filterCards('pokemon', this)">Pokémon</button>
+  <button class="filter-btn" onclick="filterCards('mtg', this)">Magic: TG</button>
+  <button class="filter-btn" onclick="filterCards('yugioh', this)">Yu-Gi-Oh!</button>
+  <button class="filter-btn" onclick="filterCards('onepiece', this)">One Piece</button>
+  <span class="filter-label" style="margin-left:16px;">Rarity:</span>
+  <button class="filter-btn" onclick="filterRarity('common', this)"><span class="rarity-dot" style="background:var(--green)"></span>Common</button>
+  <button class="filter-btn" onclick="filterRarity('rare', this)"><span class="rarity-dot" style="background:var(--rare)"></span>Rare</button>
+  <button class="filter-btn" onclick="filterRarity('gold', this)"><span class="rarity-dot" style="background:var(--gold)"></span>Ultra Rare</button>
+</div>
+
+<!-- PRODUCTS -->
+<section id="shop">
+  <div class="section-header">
+    <div>
+      <p class="section-eyebrow">// Featured Singles</p>
+      <h2 class="section-title">HOT RIGHT NOW</h2>
+    </div>
+    <a href="#" class="view-all">View All Cards →</a>
+  </div>
+  <div class="products" id="productGrid"></div>
+</section>
+
+<!-- DEALS BANNER -->
+<div class="deals-banner">
+  <div>
+    <div class="deal-side">
+      <span class="deal-label">⚡ Flash Deal — Ends Sunday</span>
+      <h2 class="deal-title">Booster Packs<br>from €3.99</h2>
+      <p class="deal-sub">Stock up on the latest sets. All major games available. Mix and match any 10 packs for free shipping.</p>
+      <a href="#" class="btn-primary" style="width:fit-content;">Shop Packs</a>
+    </div>
+    <div class="deal-img">
+      <div class="img-placeholder-dark">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Promo image — replace with pack art</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="deal-side">
+      <span class="deal-label">🏅 Graded Cards</span>
+      <h2 class="deal-title">PSA & BGS<br>Certified Slabs</h2>
+      <p class="deal-sub">Authenticated, graded, and ready to invest. Browse our certified collection — from PSA 7 to gem mint 10.</p>
+      <a href="#" class="btn-secondary" style="width:fit-content;">Browse Graded</a>
+    </div>
+    <div class="deal-img">
+      <div class="img-placeholder-dark">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Promo image — replace with slab photo</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">VAULT<span>EX</span></div>
+    <p class="footer-desc">Your trusted source for trading cards since 2018. Thousands of singles, packs, and graded slabs. Real cards, real prices.</p>
+  </div>
+  <div>
+    <h4>Shop</h4>
+    <ul>
+      <li><a href="#">Singles</a></li>
+      <li><a href="#">Booster Packs</a></li>
+      <li><a href="#">Graded Slabs</a></li>
+      <li><a href="#">Bundles</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4>Games</h4>
+    <ul>
+      <li><a href="#">Pokémon TCG</a></li>
+      <li><a href="#">Magic: The Gathering</a></li>
+      <li><a href="#">Yu-Gi-Oh!</a></li>
+      <li><a href="#">One Piece TCG</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4>Support</h4>
+    <ul>
+      <li><a href="#">Grading Guide</a></li>
+      <li><a href="#">Shipping & Returns</a></li>
+      <li><a href="#">Sell Your Cards</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span>© 2025 VAULTEX. All rights reserved.</span>
+  <span>We buy · We sell · We grade</span>
+</div>
+
+<!-- OVERLAY + CART -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+<div class="cart-drawer" id="cartDrawer">
+  <div class="drawer-header">
+    <span class="drawer-title">// YOUR CART</span>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-footer" id="drawerFooter" style="display:none;">
+    <div class="sub-row">
+      <span class="sub-label">Subtotal</span>
+      <span class="sub-amount" id="subtotalAmount">€0.00</span>
+    </div>
+    <button class="checkout-btn">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+const cards = [
+  { id:1,  name:"Charizard ex",         game:"Pokémon TCG",  set:"Obsidian Flames",    rarity:"gold",   price:189, sale:null, badge:"hot",  stock:"low"  },
+  { id:2,  name:"Black Lotus",           game:"Magic: TG",    set:"Alpha Edition",      rarity:"gold",   price:999, sale:null, badge:"foil", stock:"low"  },
+  { id:3,  name:"Mewtwo V-STAR",         game:"Pokémon TCG",  set:"Pokemon GO",         rarity:"rare",   price:34,  sale:24,   badge:"sale", stock:"ok"   },
+  { id:4,  name:"Blue-Eyes White Dragon",game:"Yu-Gi-Oh!",    set:"Legend of Blue Eyes",rarity:"rare",   price:58,  sale:null, badge:null,   stock:"ok"   },
+  { id:5,  name:"Pikachu Illustration",  game:"Pokémon TCG",  set:"151 SV",             rarity:"gold",   price:320, sale:null, badge:"new",  stock:"low"  },
+  { id:6,  name:"Liliana of the Veil",   game:"Magic: TG",    set:"Modern Masters",     rarity:"rare",   price:47,  sale:null, badge:null,   stock:"ok"   },
+  { id:7,  name:"Monkey D. Luffy OP01",  game:"One Piece TCG",set:"Romance Dawn",       rarity:"rare",   price:22,  sale:16,   badge:"sale", stock:"ok"   },
+  { id:8,  name:"Dark Magician",         game:"Yu-Gi-Oh!",    set:"Pharaoh's Servant",  rarity:"common", price:12,  sale:null, badge:"new",  stock:"ok"   },
+];
+
+let cart = [];
+let activeGame = 'all';
+let activeRarity = null;
+
+// ── RENDER ──
+function renderCards() {
+  const grid = document.getElementById('productGrid');
+  let filtered = cards.filter(c => {
+    const gameMatch = activeGame === 'all' ||
+      (activeGame === 'pokemon' && c.game.includes('Pokémon')) ||
+      (activeGame === 'mtg'     && c.game.includes('Magic'))   ||
+      (activeGame === 'yugioh'  && c.game.includes('Yu-Gi'))   ||
+      (activeGame === 'onepiece'&& c.game.includes('One Piece'));
+    const rarityMatch = !activeRarity || c.rarity === activeRarity;
+    return gameMatch && rarityMatch;
+  });
+
+  grid.innerHTML = '';
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:48px;text-align:center;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:0.1em;text-transform:uppercase;font-size:0.85rem;">No cards found for this filter</div>`;
+    return;
+  }
+
+  filtered.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = `card ${c.rarity}`;
+    div.style.animationDelay = `${i * 0.05}s`;
+    const displayPrice = c.sale ?? c.price;
+    const rarityColors = { common: 'var(--green)', rare: 'var(--rare)', gold: 'var(--gold)', epic: 'var(--accent2)' };
+
+    div.innerHTML = `
+      <div class="card-img">
+        ${c.badge ? `<span class="card-badge ${c.badge}">${c.badge === 'foil' ? '✦ FOIL' : c.badge.toUpperCase()}</span>` : ''}
+        ${c.stock === 'low' ? `<span class="stock-chip low">Low Stock</span>` : `<span class="stock-chip ok">In Stock</span>`}
+        <div class="card-img-inner">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>card image</span>
+        </div>
+        <div class="rarity-bar ${c.rarity}"></div>
+      </div>
+      <div class="card-body">
+        <span class="card-game">${c.game}</span>
+        <span class="card-name">${c.name}</span>
+        <div class="card-meta">
+          <span>${c.set}</span>
+          <span>·</span>
+          <div class="card-rarity">
+            <span class="rarity-dot" style="background:${rarityColors[c.rarity]}"></span>
+            ${c.rarity.charAt(0).toUpperCase() + c.rarity.slice(1)}
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-price">
+            ${c.sale ? `<span class="price-old">€${c.price}.00</span>` : ''}
+            <span class="price-main">€${displayPrice}.00</span>
+          </div>
+          <button class="add-btn" id="btn-${c.id}" onclick="addToCart(${c.id})" title="Add to cart">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ── FILTER ──
+function filterCards(game, el) {
+  activeGame = game;
+  document.querySelectorAll('.filters-bar .filter-btn').forEach(b => {
+    if (['all','pokemon','mtg','yugioh','onepiece'].some(g => b.textContent.toLowerCase().includes(g) || b.onclick?.toString().includes(g))) {
+      b.classList.remove('active');
+    }
+  });
+  el.classList.add('active');
+  renderCards();
+}
+
+function filterRarity(rarity, el) {
+  if (activeRarity === rarity) {
+    activeRarity = null; el.classList.remove('active');
+  } else {
+    activeRarity = rarity;
+    document.querySelectorAll('.filters-bar .filter-btn').forEach(b => {
+      if (['common','rare','gold'].some(r => b.onclick?.toString().includes(r))) b.classList.remove('active');
+    });
+    el.classList.add('active');
+  }
+  renderCards();
+}
+
+// ── CART ──
+function addToCart(id) {
+  const c = cards.find(x => x.id === id);
+  const existing = cart.find(x => x.id === id);
+  const price = c.sale ?? c.price;
+  if (existing) { existing.qty++; }
+  else { cart.push({ id: c.id, name: c.name, game: c.game, price, qty: 1 }); }
+
+  updateCartUI();
+
+  const btn = document.getElementById(`btn-${id}`);
+  if (btn) {
+    btn.classList.add('added');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+    setTimeout(() => {
+      btn.classList.remove('added');
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    }, 1400);
+  }
+
+  const cc = document.getElementById('cartCount');
+  cc.classList.add('bump');
+  setTimeout(() => cc.classList.remove('bump'), 300);
+
+  showToast(`${c.name} added`);
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  updateCartUI(); renderDrawer();
+}
+
+function changeQty(id, d) {
+  const item = cart.find(x => x.id === id);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty < 1) { removeFromCart(id); return; }
+  updateCartUI(); renderDrawer();
+}
+
+function updateCartUI() {
+  document.getElementById('cartCount').textContent = cart.reduce((s,x)=>s+x.qty,0);
+  renderDrawer();
+}
+
+function renderDrawer() {
+  const container = document.getElementById('drawerItems');
+  const footer = document.getElementById('drawerFooter');
+  if (cart.length === 0) {
+    container.innerHTML = `<div class="cart-empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span>Cart is empty</span>
+    </div>`;
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  container.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="ci-img"><span>card</span></div>
+      <div>
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-game">${item.game}</div>
+        <div class="ci-price">€${item.price}.00</div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+        </div>
+      </div>
+      <button class="rm-btn" onclick="removeFromCart(${item.id})">✕</button>
+    </div>
+  `).join('');
+  const sub = cart.reduce((s,x)=>s+x.qty*x.price, 0);
+  document.getElementById('subtotalAmount').textContent = `€${sub}.00`;
+}
+
+function openCart() {
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderDrawer();
+}
+
+function closeCart() {
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+renderCards();
+</script>
+</body>
+</html>
